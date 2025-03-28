@@ -90,8 +90,8 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (query.length >= 2) {
-      const filtered = MOCK_DATA.filter((item) =>
-        item.name.toLowerCase().includes(query.toLowerCase())
+      const filtered = MOCK_DATA.filter(item =>
+        item.name.toLowerCase().includes(query.toLowerCase()),
       );
       setSearchResults(filtered);
     } else {
@@ -126,7 +126,8 @@ export function SearchModal({ children }: { children: React.ReactNode }) {
         {searchResults && searchResults.length > 0 ? (
           <div className="max-h-64 overflow-y-auto border rounded-md p-2 space-y-2">
             {searchResults.map((result, index) => (
-              <Link href={`/products/${result.id}`}
+              <Link
+                href={`/products/${result.id}`}
                 key={index}
                 className="flex items-center gap-4 p-2 hover:bg-gray-100 rounded-md transition-colors"
               >

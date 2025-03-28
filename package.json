@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
+    "dev:prepare": "next lint --fix && prettier --write . && next build",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
@@ -38,6 +39,7 @@
     "@sanity/icons": "^3.7.0",
     "@sanity/image-url": "1",
     "@sanity/vision": "3",
+    "@tanstack/react-query": "^5.70.0",
     "argon2": "^0.41.1",
     "axios": "^1.8.3",
     "class-variance-authority": "^0.7.1",
@@ -62,6 +64,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@tanstack/eslint-plugin-query": "^5.68.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -18,7 +18,9 @@ export async function createProduct(data: {
     return await prisma.product.create({
       data: {
         ...data,
-        attributes: data.attributes ? JSON.stringify(data.attributes) : undefined,
+        attributes: data.attributes
+          ? JSON.stringify(data.attributes)
+          : undefined,
       },
     });
   } catch (err) {
@@ -82,14 +84,17 @@ export async function getProducts({
 }
 
 // Update a product
-export async function updateProduct(id: string, data: Partial<Omit<typeof createProduct, "id">>) {
+export async function updateProduct(
+  id: string,
+  data: Partial<Omit<typeof createProduct, "id">>,
+) {
   try {
     if (!id) {
       throw new Error("Product ID is required.");
     }
     return await prisma.product.update({
       where: { id },
-      data: data
+      data: data,
       /*
       {
         ...data,

@@ -6,7 +6,11 @@ import { getProductById } from "@/lib/repositories/product.repository";
 import { LoadingSpinnerLayout } from "@/components/common/loadingSpinner";
 import SanityImage from "@/components/common/sanity-image.client";
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   // Fetch product data
   const productData = await getProductById(params.id);
 
@@ -34,7 +38,11 @@ export default async function ProductPage({ params }: { params: { id: string } }
         {/* Product Images */}
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-lg">
-          <SanityImage alt={productData.name} image={productData.image[0]} className="object-cover"/>
+            <SanityImage
+              alt={productData.name}
+              image={productData.image[0]}
+              className="object-cover"
+            />
           </div>
           <div className="grid grid-cols-3 gap-2">
             {productData?.image.map((image, index) => (
@@ -43,7 +51,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                 className="relative aspect-square overflow-hidden rounded-lg border cursor-pointer"
               >
                 <SanityImage
-                  alt={productData.name} 
+                  alt={productData.name}
                   image={productData.image[0]}
                   className="object-cover"
                 />
