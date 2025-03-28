@@ -1,9 +1,9 @@
+"use client";
 import ProductCard from "@/components/common/productCard";
 
 type TProduct = {
   id: string;
   name: string;
-  // catagories: string[];
   price: number;
   image: string[];
 };
