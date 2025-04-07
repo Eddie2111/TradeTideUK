@@ -14,8 +14,6 @@ enum ProductStatus {
   DISCONTINUED
 }
 enum UserRole {
-  ADMIN
-  USER
-  BUYER
-  SELLER
+  ACTIVE
+  BLOCKED
 }

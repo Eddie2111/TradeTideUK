@@ -24,6 +24,60 @@ export async function upsertCart(userId: string, productIds?: string[]) {
   }
 }
 
+export async function createCart(
+  email: string,
+  productIds?: string[],
+): Promise<{ message: string; status: boolean }> {
+  try {
+    if (!email) {
+      return { message: "User email is required.", status: false };
+    }
+
+    const userProfile = await prisma.user.findFirst({
+      where: { email },
+      select: {
+        profiles: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    if (!userProfile || userProfile.profiles.length === 0) {
+      return {
+        message: "Please create your profile to proceed.",
+        status: false,
+      };
+    }
+
+    const userId = userProfile.profiles[0].id;
+
+    await prisma.cart.create({
+      data: {
+        userId,
+        productId: productIds || [],
+      },
+    });
+
+    return { message: "Cart created successfully!", status: true };
+  } catch (error) {
+    console.error("Error creating cart:", error);
+
+    if (error instanceof Error) {
+      return {
+        message: `Failed to create cart: ${error.message}`,
+        status: false,
+      };
+    }
+
+    return {
+      message: "An unexpected error occurred while creating the cart.",
+      status: false,
+    };
+  }
+}
+
 // Add a product to the cart
 export async function addProductToCart(userId: string, productId: string) {
   try {
