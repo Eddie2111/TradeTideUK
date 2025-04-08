@@ -2,27 +2,27 @@
 import { prisma } from "@/lib/prisma";
 
 // Create or update a cart for a user
-export async function upsertCart(userId: string, productIds?: string[]) {
-  try {
-    if (!userId) {
-      throw new Error("User ID is required.");
-    }
+// export async function upsertCart(userId: string, productIds?: string[]) {
+//   try {
+//     if (!userId) {
+//       throw new Error("User ID is required.");
+//     }
 
-    return await prisma.cart.upsert({
-      where: { userId },
-      update: {
-        productId: productIds || [],
-      },
-      create: {
-        userId,
-        productId: productIds || [],
-      },
-    });
-  } catch (err) {
-    console.error("Error creating/updating cart:", err);
-    throw err;
-  }
-}
+//     return await prisma.cart.upsert({
+//       where: { userId },
+//       update: {
+//         productId: productIds || [],
+//       },
+//       create: {
+//         userId,
+//         productId: productIds || [],
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error creating/updating cart:", err);
+//     throw err;
+//   }
+// }
 
 export async function createCart(
   email: string,
@@ -79,25 +79,26 @@ export async function createCart(
 }
 
 // Add a product to the cart
-export async function addProductToCart(userId: string, productId: string) {
+export async function addProductToCart(userId: string, productId: string, cartId: string) {
   try {
     if (!userId || !productId) {
       throw new Error("User ID and Product ID are required.");
     }
 
-    const cart = await prisma.cart.findUnique({
+    const cart = await prisma.cart.findFirst({
       where: { userId },
-    });
+    })
 
     const updatedProductIds = cart?.productId
       ? [...cart.productId, productId]
       : [productId];
 
     return await prisma.cart.upsert({
-      where: { userId },
+      where: { id: cartId },
       update: { productId: updatedProductIds },
       create: { userId, productId: updatedProductIds },
     });
+
   } catch (err) {
     console.error("Error adding product to cart:", err);
     throw err;
@@ -105,14 +106,14 @@ export async function addProductToCart(userId: string, productId: string) {
 }
 
 // Remove a product from the cart
-export async function removeProductFromCart(userId: string, productId: string) {
+export async function removeProductFromCart(userId: string, productId: string, cartId: string) {
   try {
-    if (!userId || !productId) {
-      throw new Error("User ID and Product ID are required.");
+    if (!userId || !productId || !cartId) {
+      throw new Error("User ID, Product ID and cart ID are required.");
     }
 
     const cart = await prisma.cart.findUnique({
-      where: { userId },
+      where: { id: cartId },
     });
 
     if (!cart) {
@@ -122,7 +123,7 @@ export async function removeProductFromCart(userId: string, productId: string) {
     const updatedProductIds = cart.productId.filter(id => id !== productId);
 
     return await prisma.cart.update({
-      where: { userId },
+      where: { id: cartId },
       data: { productId: updatedProductIds },
     });
   } catch (err) {
@@ -132,14 +133,14 @@ export async function removeProductFromCart(userId: string, productId: string) {
 }
 
 // Get a user's cart
-export async function getCart(userId: string) {
+export async function getCart(userId: string, cartId: string) {
   try {
     if (!userId) {
       throw new Error("User ID is required.");
     }
 
     return await prisma.cart.findUnique({
-      where: { userId },
+      where: { id: cartId },
       select: {
         productId: true,
       },
@@ -151,14 +152,14 @@ export async function getCart(userId: string) {
 }
 
 // Clear a user's cart
-export async function clearCart(userId: string) {
+export async function clearCart(userId: string, cartId: string) {
   try {
     if (!userId) {
       throw new Error("User ID is required.");
     }
 
     return await prisma.cart.update({
-      where: { userId },
+      where: { id: cartId },
       data: { productId: [] },
     });
   } catch (err) {

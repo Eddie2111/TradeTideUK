@@ -13,7 +13,7 @@ enum ProductStatus {
   OUT_OF_STOCK
   DISCONTINUED
 }
-enum UserRole {
+enum UserStatus {
   ACTIVE
   BLOCKED
 }

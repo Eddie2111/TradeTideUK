@@ -11,6 +11,7 @@ export type TItems = {
 };
 
 interface ICart {
+  cartId: string;
   user: string;
   items: TItems[];
   addItem: (item: TItems) => void;
@@ -25,6 +26,7 @@ interface ICart {
 export const useCartContext = create<ICart>()(
   persist(
     set => ({
+      cartId: "",
       user: "",
       items: [],
 
