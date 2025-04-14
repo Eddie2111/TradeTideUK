@@ -7,7 +7,7 @@ const useLocalStorage = () => {
 
   const getLocalStorage = (key: string) => {
     if (!isBrowser) return null;
-    const item = localStorage.getItem(key);
+    const item = JSON.parse(localStorage.getItem(key) ?? "");
     return item ? item : null;
   };
 

@@ -4,7 +4,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import { getOneUserWithProfile } from "@/lib/repositories/profile.repository";
+import { getOneUserIfProfileExists } from "@/lib/repositories/profile.repository";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 
 export default function UserProfileProvider() {
@@ -14,40 +14,44 @@ export default function UserProfileProvider() {
   const [count, setCount] = React.useState<number>(0);
   React.useEffect(() => {
     async function profileCallback(id: string) {
-      if(getLocalStorage("profile")){
+      if (getLocalStorage("profile")) {
         return null;
       }
-      if (!getLocalStorage("profile") && count<2) {
+      if (!getLocalStorage("profile") && count < 2) {
         setCount(count + 1);
-        return await getOneUserWithProfile({id});
+        return await getOneUserIfProfileExists({ id });
       }
     }
-    if(session) {
-      profileCallback(session?.user?.id as string).then((res) => {
-        if(res && res?.data?.profiles && res.data.profiles.length>0) {
-          setLocalStorage("profile", res.data.profiles[0]);
-        }
-        if(res && res.data?.profiles.length===0 && !pathname.includes("onboard")){
-          toast(  
-            () => (
-            <>
-              You don&apos;t have a profile yet, creating one allows you to checkout and buy products! &nbsp;
-              <a 
-                href="/user/onboard" 
-                target="_blank" 
-                className="text-blue-500 hover:underline underline hover:text-blue-700 duration-200">
-                Click here to create one!
-              </a>
-            </>
-          )
-        )
-        }
-      })
-      .catch(err=>{
-        toast.error(err.message)
-      })
-    
+    if (session) {
+      profileCallback(session?.user?.id as string)
+        .then(res => {
+          if (res && res?.data?.profiles && res.data.profiles.length > 0) {
+            setLocalStorage("profile", JSON.stringify(res.data.profiles[0]));
+          }
+          if (
+            res &&
+            res.data?.profiles.length === 0 &&
+            !pathname.includes("onboard")
+          ) {
+            toast(() => (
+              <>
+                You don&apos;t have a profile yet, creating one allows you to
+                checkout and buy products! &nbsp;
+                <a
+                  href="/user/onboard"
+                  target="_blank"
+                  className="text-blue-500 hover:underline underline hover:text-blue-700 duration-200"
+                >
+                  Click here to create one!
+                </a>
+              </>
+            ));
+          }
+        })
+        .catch(err => {
+          toast.error(err.message);
+        });
     }
   }, [count, getLocalStorage, pathname, session, setLocalStorage]);
-    return <></>;
-  }
+  return <></>;
+}

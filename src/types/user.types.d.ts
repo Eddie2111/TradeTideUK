@@ -1,4 +1,10 @@
-import type { Cart, Checkout, Order, UserStatus, Wishlist } from "@prisma/client";
+import type {
+  Cart,
+  Checkout,
+  Order,
+  UserStatus,
+  Wishlist,
+} from "@prisma/client";
 
 export interface IUserProfile {
   id: string;
@@ -19,8 +25,6 @@ export interface IUserProfile {
     orders: Order[];
   }[];
 }
-
-
 
 export interface IUser {
   id: string;
@@ -67,7 +71,7 @@ interface Checkout {
   shippingAddress: string[];
   billingAddress: string[];
   shippingCharge: number;
-  paymentMethod: 'CASH_ON_DELIVERY' | 'ONLINE' | string;
+  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | string;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,8 +87,8 @@ export interface IOrder {
     address: string;
   };
   shippingCharge: number;
-  orderStatus: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | string;
-  paymentMethod: 'CASH_ON_DELIVERY' | 'ONLINE' | string;
+  orderStatus: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | string;
+  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | string;
   createdAt: Date;
   updatedAt: Date;
 }

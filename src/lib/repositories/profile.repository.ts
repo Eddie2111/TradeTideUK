@@ -3,10 +3,13 @@ import { prisma } from "@/lib/prisma"; // to use as client connection instance
 import { IUser } from "@/types/user.types";
 import { UserStatus, type UserProfile } from "@prisma/client";
 
-export async function getOneUserWithProfile({ id }: { id: string }): Promise<{data: IUser | null, message: string}> {
+export async function getOneUserWithProfile({
+  id,
+}: {
+  id: string;
+}): Promise<{ data: IUser | null; message: string }> {
   if (!id) return { data: null, message: "Error fetching user profiles" };
   try {
-
     const oneUserProfile = await prisma.user.findUnique({
       where: {
         id: id,
@@ -16,7 +19,7 @@ export async function getOneUserWithProfile({ id }: { id: string }): Promise<{da
         email: true,
         profiles: {
           where: {
-            status: { not: UserStatus.BLOCKED }
+            status: { not: UserStatus.BLOCKED },
           },
           select: {
             id: true,
@@ -35,7 +38,7 @@ export async function getOneUserWithProfile({ id }: { id: string }): Promise<{da
                 productId: true,
                 createdAt: true,
                 updatedAt: true,
-              }
+              },
             },
             carts: {
               select: {
@@ -44,7 +47,7 @@ export async function getOneUserWithProfile({ id }: { id: string }): Promise<{da
                 productId: true,
                 createdAt: true,
                 updatedAt: true,
-              }
+              },
             },
             checkouts: {
               select: {
@@ -55,7 +58,7 @@ export async function getOneUserWithProfile({ id }: { id: string }): Promise<{da
                 paymentMethod: true,
                 createdAt: true,
                 updatedAt: true,
-              }
+              },
             },
             orders: {
               select: {
@@ -68,25 +71,52 @@ export async function getOneUserWithProfile({ id }: { id: string }): Promise<{da
                 shippingAddress: true,
                 createdAt: true,
                 updatedAt: true,
-              }
+              },
             },
-          }
-        }
-      }
-    })
-      
+          },
+        },
+      },
+    });
+
     if (!oneUserProfile) {
       return { data: null, message: "User profile not found" };
     }
 
-    return { data: oneUserProfile, message: 'success'};
-
+    return { data: oneUserProfile, message: "success" };
   } catch (err) {
     console.error("Error fetching user profiles:", err);
     return { data: null, message: "Error fetching user profiles" };
   }
 }
 
+export async function getOneUserIfProfileExists({
+  id,
+}: {
+  id: string;
+}): Promise<{
+  data: {
+    profiles: {
+      id: string;
+    }[];
+  } | null;
+  message: string;
+}> {
+  if (!id) return { data: null, message: "Error fetching user profiles" };
+  const data = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      profiles: {
+        where: {
+          status: { not: UserStatus.BLOCKED },
+        },
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+  return { data, message: "success" };
+}
 
 // ! May not be required
 // export async function getUsersWithProfile({

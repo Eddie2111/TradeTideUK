@@ -40,7 +40,7 @@ export default function RootLayout({
           <CartInitializer />
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <div className="relative flex min-h-screen flex-col">
-              <UserProfileProvider/>
+              <UserProfileProvider />
               <SiteHeader />
               <div className="flex-1">{children}</div>
               <SiteFooter />

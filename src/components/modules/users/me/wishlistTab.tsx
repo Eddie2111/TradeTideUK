@@ -48,9 +48,11 @@ const WishListsTab = ({ wishlist }: { wishlist: IWishlist }) => {
   return (
     <div className="space-y-4">
       {productData.length === 0 ? (
-        <div className="text-center py-4">No products found in your wishlist.</div>
+        <div className="text-center py-4">
+          No products found in your wishlist.
+        </div>
       ) : (
-        productData.map((item) => (
+        productData.map(item => (
           <Card key={item.id}>
             <CardContent className="p-4">
               <div className="flex gap-4">
@@ -67,11 +69,7 @@ const WishListsTab = ({ wishlist }: { wishlist: IWishlist }) => {
                     ৳{item.price.toLocaleString()}
                   </p>
                   <div className="flex gap-2 mt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs"
-                    >
+                    <Button size="sm" variant="outline" className="h-8 text-xs">
                       Add to Cart
                     </Button>
                     <Button

@@ -80,7 +80,9 @@ export default function UserProfilePage() {
         return "bg-gray-100 text-gray-800";
     }
   };
-  const joining_date = Dayjs(userProfile.profiles[0].createdAt).format("DD MMM YYYY");
+  const joining_date = Dayjs(userProfile.profiles[0].createdAt).format(
+    "DD MMM YYYY",
+  );
   const _userProfile = userProfile.profiles[0];
 
   return (
@@ -147,9 +149,7 @@ export default function UserProfilePage() {
                   <div className="flex flex-col sm:flex-row justify-between mb-4">
                     <div>
                       <div className="flex items-center">
-                        <h3 className="font-semibold">
-                          Order #{order.id}
-                        </h3>
+                        <h3 className="font-semibold">Order #{order.id}</h3>
                         <Badge
                           className={`ml-2 ${getStatusColor(order.orderStatus)}`}
                         >
@@ -202,42 +202,42 @@ export default function UserProfilePage() {
           </div>
         </TabsContent>
         <TabsContent value="wishlist" className="mt-6">
-        {_userProfile.wishlists.map((wishlist: IWishlist) => (
-              <Card key={wishlist.id}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row justify-between mb-4">
-                    <div>
-                      <div className="flex items-center">
-                        <h3 className="font-semibold">
-                          Wishlist id #{wishlist.id}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Number of items {wishlist.productId.length}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Placed on {Dayjs(wishlist.createdAt).format("DD MMM YYYY")}
-                      </p>
+          {_userProfile.wishlists.map((wishlist: IWishlist) => (
+            <Card key={wishlist.id}>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row justify-between mb-4">
+                  <div>
+                    <div className="flex items-center">
+                      <h3 className="font-semibold">
+                        Wishlist id #{wishlist.id}
+                      </h3>
                     </div>
-                    <div className="mt-2 sm:mt-0">
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="p-0 h-auto"
-                        asChild
-                      >
-                        <Link href={`/user/wishlist/${wishlist.id}`}>
-                          View Details
-                        </Link>
-                      </Button>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Number of items {wishlist.productId.length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Placed on{" "}
+                      {Dayjs(wishlist.createdAt).format("DD MMM YYYY")}
+                    </p>
                   </div>
-                  <Separator className="my-2" />
-                  <div className="space-y-2">
+                  <div className="mt-2 sm:mt-0">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="p-0 h-auto"
+                      asChild
+                    >
+                      <Link href={`/user/wishlist/${wishlist.id}`}>
+                        View Details
+                      </Link>
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+                <Separator className="my-2" />
+                <div className="space-y-2"></div>
+              </CardContent>
+            </Card>
+          ))}
           <div className="text-center mt-4">
             <Button variant="outline" asChild>
               <Link href="/user/wishlist">View Full Wishlist</Link>

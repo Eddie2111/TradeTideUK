@@ -21,18 +21,15 @@ export const OrderSummary = ({ subtotal, shipping, total }: IOrderSummary) => {
   const { getLocalStorage } = useLocalStorage();
   const router = useRouter();
   const redirectTo = (): void => {
-    if (session?.user && getLocalStorage("profile")) {
+    if (getLocalStorage("profile") && session?.user?.id) {
       router.push("/checkout");
-    } 
-    if (!session?.user) {
+    } else if (!session?.user) {
       toast.warning("Please login to proceed");
       router.push("/login");
-    }
-    else {
+    } else {
       toast.warning("Please create your profile to proceed");
-      router.push("/user/onboard")
+      router.push("/user/onboard");
     }
-
   };
   return (
     <Card>
