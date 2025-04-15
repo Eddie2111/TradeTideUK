@@ -1,5 +1,5 @@
 "use server";
-import { prisma } from "@/lib/prisma"; // to use as client connection instance
+import { prisma } from "@/lib/prisma";
 import { IUser } from "@/types/user.types";
 import { UserStatus, type UserProfile } from "@prisma/client";
 
@@ -118,105 +118,6 @@ export async function getOneUserIfProfileExists({
   return { data, message: "success" };
 }
 
-// ! May not be required
-// export async function getUsersWithProfile({
-//   skip = 0,
-//   take = 10,
-//   filter = {},
-// }: {
-//   skip?: number;
-//   take?: number;
-//   filter?: Partial<{
-//     firstName: string;
-//     lastName: string;
-//     email: string;
-//   }>;
-// }) {
-//   try {
-//     // Construct the WHERE clause for filtering user profiles
-//     const where: Prisma.UserProfileWhereInput = {
-//       firstName: filter.firstName ? { contains: filter.firstName } : undefined,
-//       lastName: filter.lastName ? { contains: filter.lastName } : undefined,
-//       user: filter.email
-//         ? {
-//             email: { contains: filter.email },
-//           }
-//         : undefined,
-//     };
-
-//     // Fetch user profiles with their associated orders
-//     const [userProfiles, total] = await Promise.all([
-//       prisma.userProfile.findMany({
-//         where,
-//         skip,
-//         take,
-//         select: {
-//           id: true,
-//           firstName: true,
-//           lastName: true,
-//           phoneNumber: true,
-//           address: true,
-//           image: true,
-//           createdAt: true,
-//           updatedAt: true,
-//           status: true,
-//           user: {
-//             select: {
-//               email: true,
-//             },
-//           },
-//           orders: {
-//             select: {
-//               products: true, // Array of product IDs
-//               shippingCharge: true, // Shipping charge for the order
-//             },
-//           },
-//         },
-//       }),
-//       prisma.userProfile.count({ where }),
-//     ]);
-
-//     // Process each user profile to calculate additional metrics
-//     const enrichedUserProfiles = await Promise.all(
-//       userProfiles.map(async profile => {
-//         // Flatten all product arrays from orders into a single array
-//         const allProducts = profile.orders.flatMap(order => order.products);
-
-//         // Calculate the total number of products purchased
-//         const totalProductsPurchased = allProducts.length;
-
-//         // Calculate the total amount spent by the user
-//         const totalAmountSpent = profile.orders.reduce(
-//           (sum, order) =>
-//             sum +
-//             order.products.length * 10 + // Assuming $10 per product (replace with actual price logic)
-//             order.shippingCharge,
-//           0,
-//         );
-
-//         // Calculate the average number of expenses per order
-//         const totalOrders = profile.orders.length;
-//         const averageExpenses =
-//           totalOrders > 0 ? totalProductsPurchased / totalOrders : 0;
-
-//         // Return the enriched user profile object
-//         return {
-//           ...profile,
-//           totalProductsPurchased,
-//           averageExpenses,
-//           totalAmountSpent,
-//         };
-//       }),
-//     );
-
-//     return { users: enrichedUserProfiles, total };
-//   } catch (err) {
-//     console.error("Error fetching user profiles:", err);
-//     throw err;
-//   }
-// }
-// ! May not be required
-
 export async function updateUserWithProfile({
   id,
   userData,
@@ -240,4 +141,45 @@ export async function updateUserWithProfile({
     }
     console.log("Error updating user profile:", errorData.message);
   }
+}
+
+export async function createUserWithProfile({
+  userId,
+  profileData,
+}: {
+  userId: string;
+  profileData: {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    address: string;
+    image: string;
+  };
+}) {
+  try {
+    console.log(userId, profileData);
+    const response = await prisma.userProfile.create({
+      data: {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phoneNumber: profileData.phoneNumber,
+        address: profileData.address,
+        image: profileData.image,
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
+    });
+    return response;
+  } catch (err: unknown) {
+    const errorData = err as { code: string; message: string };
+    if (errorData.code === "P2002") {
+      console.log("Duplicate entry");
+      return false;
+    }
+    console.log("Error creating user profile:", errorData.message);
+  }
+  return null;
 }

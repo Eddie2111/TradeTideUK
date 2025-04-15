@@ -28,6 +28,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { uploadImages } from "@/lib/uploadImages";
+import { useSession } from "next-auth/react";
+import { createUserWithProfile } from "@/lib/repositories/profile.repository";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -35,12 +38,13 @@ const formSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
   address: z.string().min(1, "Address is required"),
-  image: z.string().optional(),
+  image: z.instanceof(File).optional(), // Allow File type for image
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function UserOnboardingPage() {
+  const { data: session } = useSession();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -57,7 +61,7 @@ export default function UserOnboardingPage() {
       lastName: "",
       phoneNumber: "",
       address: "",
-      image: "",
+      image: undefined, // Initialize image as undefined
     },
   });
 
@@ -72,9 +76,9 @@ export default function UserOnboardingPage() {
     onDrop: acceptedFiles => {
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
-        const imageUrl = URL.createObjectURL(file);
+        const imageUrl = URL.createObjectURL(file); // Create a temporary preview URL
         setPreviewImage(imageUrl);
-        form.setValue("image", imageUrl);
+        form.setValue("image", file); // Store the file in the form state
       }
     },
   });
@@ -96,16 +100,31 @@ export default function UserOnboardingPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call to create user profile
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Upload the image to the API if it exists
+      let uploadedImageUrl = null;
+      if (data.image instanceof File) {
+        uploadedImageUrl = await uploadImages([data.image]);
+      }
 
-      console.log("Form submitted with data:", data);
-      setIsComplete(true);
+      if (!uploadedImageUrl) {
+        toast.warning("Please upload a profile picture.");
+        return;
+      }
 
+      const finalFormData = {
+        ...data,
+        image: uploadedImageUrl[0] ?? null,
+      };
+
+      console.log("Form submitted with data:", finalFormData);
+      const response = await createUserWithProfile({
+        userId: session?.user?.id ?? "test",
+        profileData: finalFormData,
+      });
+      console.log(response);
       // After a delay, redirect to profile page
-      setTimeout(() => {
-        router.push("/user/me");
-      }, 2000);
+      setIsComplete(true);
+      router.push("/user/me");
     } catch (error) {
       console.error(error);
       toast.warning(

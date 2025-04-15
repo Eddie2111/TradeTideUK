@@ -26,7 +26,8 @@ export default function UserProfileProvider() {
       profileCallback(session?.user?.id as string)
         .then(res => {
           if (res && res?.data?.profiles && res.data.profiles.length > 0) {
-            setLocalStorage("profile", JSON.stringify(res.data.profiles[0]));
+            console.log(res.data.profiles[0], "where is this?");
+            // setLocalStorage("profile", JSON.stringify(res.data.profiles[0]));
           }
           if (
             res &&
@@ -49,7 +50,8 @@ export default function UserProfileProvider() {
           }
         })
         .catch(err => {
-          toast.error(err.message);
+          console.log(err);
+          toast.error("There was an issue retrieving the profile");
         });
     }
   }, [count, getLocalStorage, pathname, session, setLocalStorage]);
