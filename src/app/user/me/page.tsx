@@ -54,14 +54,11 @@ export default function UserProfilePage() {
 
   if (!userProfile) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-xl font-semibold mb-2">Profile Not Found</h2>
-        <p className="text-muted-foreground mb-6">
-          We couldn&apos;t find your profile information.
-        </p>
-        <Button asChild>
-          <Link href="/user/onboard">Complete Your Profile</Link>
-        </Button>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Still loading...</p>
+        </div>
       </div>
     );
   }
