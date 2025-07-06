@@ -164,6 +164,7 @@ export async function createUserWithProfile({
         lastName: profileData.lastName,
         phoneNumber: profileData.phoneNumber,
         address: profileData.address,
+        shippingAddress: profileData.address,
         image: profileData.image,
         user: {
           connect: {
@@ -182,4 +183,36 @@ export async function createUserWithProfile({
     console.log("Error creating user profile:", errorData.message);
   }
   return null;
+}
+
+export async function getOneUserProfile(id: string) {
+  try {
+    const response = await prisma.userProfile.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        address: true,
+        shippingAddress: true,
+        image: true,
+        createdAt: true,
+        updatedAt: true,
+        status: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return { data: response, message: "success" };
+    // return { data: response, message: "success" };
+  } catch (err) {
+    console.log("Error fetching user profile:", err);
+  }
+  return { data: null, message: "user profile not found"}
 }

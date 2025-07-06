@@ -11,6 +11,7 @@ export async function createOrder(data: {
   shippingCharge: number;
   orderStatus: OrderStatus;
   paymentMethod: PaymentMethod;
+  totalPrice: number;
 }) {
   try {
     if (!data.userId) {
@@ -26,8 +27,10 @@ export async function createOrder(data: {
         shippingCharge: data.shippingCharge,
         orderStatus: data.orderStatus,
         paymentMethod: data.paymentMethod,
+        totalCost: data.totalPrice,
       },
     });
+
   } catch (err) {
     console.error("Error creating order:", err);
     throw err;

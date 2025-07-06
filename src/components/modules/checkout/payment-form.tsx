@@ -1,139 +1,38 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
+import { Box, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+
+import Axios from "axios";
+
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 
-interface PaymentFormProps {
-  initialData: {
-    cardName: string;
-    cardNumber: string;
-    expiryDate: string;
-    cvv: string;
-    saveCard: boolean;
-  };
-  onSubmit: (data: PaymentFormProps["initialData"], method: string) => void;
-  onBack: () => void;
-}
+import type { IPaymentFormProps } from "./types";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 
-export default function PaymentForm({
-  initialData,
-  onSubmit,
-  onBack,
-}: PaymentFormProps) {
-  const [formData, setFormData] = useState(initialData);
+export default function PaymentForm({ onBack }: IPaymentFormProps) {
+  const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState("credit");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    let formattedValue = value;
-
-    // Format card number with spaces
-    if (name === "cardNumber") {
-      formattedValue = value
-        .replace(/\s/g, "")
-        .replace(/(\d{4})/g, "$1 ")
-        .trim()
-        .slice(0, 19);
-    }
-
-    // Format expiry date
-    if (name === "expiryDate") {
-      formattedValue = value
-        .replace(/\D/g, "")
-        .replace(/(\d{2})(\d{0,2})/, "$1/$2")
-        .slice(0, 5);
-    }
-
-    // Limit CVV to 3-4 digits
-    if (name === "cvv") {
-      formattedValue = value.replace(/\D/g, "").slice(0, 4);
-    }
-
-    setFormData(prev => ({ ...prev, [name]: formattedValue }));
-
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, saveCard: checked }));
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (paymentMethod === "credit") {
-      // Card name validation
-      if (!formData.cardName.trim()) {
-        newErrors.cardName = "Cardholder name is required";
+  const { getLocalStorage } = useLocalStorage();
+  const automatePayment = async() => {
+    if(paymentMethod === "credit") {
+      const cart = getLocalStorage("cart-storage") ?? "";
+      const profile = getLocalStorage("profile") ?? ""
+      const payment = await Axios.post("/api/payment",{
+        userId: JSON.parse(profile).id,
+        products: JSON.parse(cart).state.items,
       }
-
-      // Card number validation
-      const cardNumberDigits = formData.cardNumber.replace(/\s/g, "");
-      if (!cardNumberDigits) {
-        newErrors.cardNumber = "Card number is required";
-      } else if (!/^\d{16}$/.test(cardNumberDigits)) {
-        newErrors.cardNumber = "Please enter a valid 16-digit card number";
-      }
-
-      // Expiry date validation
-      if (!formData.expiryDate) {
-        newErrors.expiryDate = "Expiry date is required";
-      } else if (!/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
-        newErrors.expiryDate = "Please enter a valid expiry date (MM/YY)";
-      } else {
-        const [month, year] = formData.expiryDate.split("/");
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear() % 100;
-        const currentMonth = currentDate.getMonth() + 1;
-
-        if (Number.parseInt(month) < 1 || Number.parseInt(month) > 12) {
-          newErrors.expiryDate = "Invalid month";
-        } else if (
-          Number.parseInt(year) < currentYear ||
-          (Number.parseInt(year) === currentYear &&
-            Number.parseInt(month) < currentMonth)
-        ) {
-          newErrors.expiryDate = "Card has expired";
-        }
-      }
-
-      // CVV validation
-      if (!formData.cvv) {
-        newErrors.cvv = "CVV is required";
-      } else if (!/^\d{3,4}$/.test(formData.cvv)) {
-        newErrors.cvv = "Please enter a valid CVV";
-      }
+      );
+      // router.push(payment.data.url);
+      console.log(payment.data.url)
+      console.log(paymentMethod)
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (validateForm()) {
-      onSubmit(formData, paymentMethod);
-    }
-  };
-
+  }
   return (
     <div>
       <div className="mb-6">
@@ -143,7 +42,7 @@ export default function PaymentForm({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+
         <RadioGroup
           value={paymentMethod}
           onValueChange={setPaymentMethod}
@@ -157,99 +56,17 @@ export default function PaymentForm({
                 <RadioGroupItem value="credit" id="credit" />
                 <Label
                   htmlFor="credit"
-                  className="flex items-center cursor-pointer"
+                  className="flex cursor-pointer flex-col"
                 >
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  <span>Credit / Debit Card</span>
+                  <div className="flex flex-row">
+                    <CreditCard className="mr-2 h-5 w-5" />
+                    <p>Credit / Debit Card</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pay when your order is delivered
+                  </p>
                 </Label>
               </div>
-
-              {paymentMethod === "credit" && (
-                <div className="space-y-4 pl-7">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">Cardholder Name</Label>
-                    <Input
-                      id="cardName"
-                      name="cardName"
-                      placeholder="John Doe"
-                      value={formData.cardName}
-                      onChange={handleChange}
-                      className={errors.cardName ? "border-destructive" : ""}
-                    />
-                    {errors.cardName && (
-                      <p className="text-destructive text-sm">
-                        {errors.cardName}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      name="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.cardNumber}
-                      onChange={handleChange}
-                      className={errors.cardNumber ? "border-destructive" : ""}
-                    />
-                    {errors.cardNumber && (
-                      <p className="text-destructive text-sm">
-                        {errors.cardNumber}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input
-                        id="expiryDate"
-                        name="expiryDate"
-                        placeholder="MM/YY"
-                        value={formData.expiryDate}
-                        onChange={handleChange}
-                        className={
-                          errors.expiryDate ? "border-destructive" : ""
-                        }
-                      />
-                      {errors.expiryDate && (
-                        <p className="text-destructive text-sm">
-                          {errors.expiryDate}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        name="cvv"
-                        placeholder="123"
-                        value={formData.cvv}
-                        onChange={handleChange}
-                        className={errors.cvv ? "border-destructive" : ""}
-                      />
-                      {errors.cvv && (
-                        <p className="text-destructive text-sm">{errors.cvv}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="saveCard"
-                      checked={formData.saveCard}
-                      onCheckedChange={handleCheckboxChange}
-                    />
-                    <Label
-                      htmlFor="saveCard"
-                      className="text-sm cursor-pointer"
-                    >
-                      Save card for future purchases
-                    </Label>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -259,26 +76,13 @@ export default function PaymentForm({
             <CardContent className="flex items-center space-x-3 p-4">
               <RadioGroupItem value="cash" id="cash" />
               <Label htmlFor="cash" className="cursor-pointer">
-                <div>
-                  <p className="font-medium">Cash on Delivery</p>
+                <div className="flex flex-col">
+                  <div className="flex flex-row space-y-1">
+                    <Box className="h-6 w-6 rounded-full bg-muted mr-2" />
+                    <p className="font-medium">Cash on Delivery</p>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     Pay when your order is delivered
-                  </p>
-                </div>
-              </Label>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`border ${paymentMethod === "bkash" ? "border-primary" : ""}`}
-          >
-            <CardContent className="flex items-center space-x-3 p-4">
-              <RadioGroupItem value="bkash" id="bkash" />
-              <Label htmlFor="bkash" className="cursor-pointer">
-                <div>
-                  <p className="font-medium">bKash</p>
-                  <p className="text-sm text-muted-foreground">
-                    Pay using bKash mobile banking
                   </p>
                 </div>
               </Label>
@@ -291,12 +95,12 @@ export default function PaymentForm({
             <ChevronLeft className="mr-2 h-4 w-4" />
             Back to Shipping
           </Button>
-          <Button type="submit">
+          <Button onClick={automatePayment}>
             Continue to Review
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </form>
+
     </div>
   );
 }

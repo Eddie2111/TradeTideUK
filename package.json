@@ -10,7 +10,9 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "prisma:migrate": "prisma --RESTRICTED 'DO NOT RUN MIGRATIONS FROM CLIENT SIDE'",
+    "primsa:pull": "prisma db pull",
     "prisma:generate": "prisma generate",
+    "prisma:format": "prisma format",
     "prisma:studio": "prisma studio",
     "post:install": "prisma generate",
     "dev:prepare": "next lint --fix && prettier --write . && next build"
@@ -58,6 +60,7 @@
     "sanity": "3",
     "sharp": "^0.33.5",
     "sonner": "^1.7.4",
+    "stripe": "^18.0.0",
     "styled-components": "6",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",

@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 import { prisma } from "@/lib/prisma";
 import { upsertUser } from "@/lib/repositories/user.repository";
+import { allowRequest } from "@/lib/rate-limiter.util";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -16,6 +17,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async session({ session, user }) {
       session.user.id = user.id;
+      if (!allowRequest(user.id)) {
+        console.log("Rate limit exceeded for user:", user.id);
+        return session;
+      }
       try {
         await upsertUser({
           id: user.id,

@@ -1,16 +1,16 @@
 model Product {
-  id          String   @id @unique @default(cuid())
-  name        String   @db.VarChar(52)
-  description String   @db.Text
-  price       Int      @db.Integer
-  image       String[] @db.VarChar(64)
-  quantity    Int      @db.Integer
-  attributes  Json?    @db.Json
+  id          String        @id @unique @default(cuid())
+  name        String        @db.VarChar(52)
+  description String
+  price       Int
+  image       String[]      @db.VarChar(64)
+  quantity    Int
+  attributes  Json?         @db.Json
   color       String[]
   categories  String[]
   status      ProductStatus
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
 }
 
 model Wishlist {
@@ -35,6 +35,7 @@ model Order {
   id              String        @id @unique @default(cuid())
   userId          String
   products        String[]
+  totalCost       Float         @default(0.00)
   shippingAddress Json          @db.Json
   billingAddress  Json          @db.Json
   shippingCharge  Int

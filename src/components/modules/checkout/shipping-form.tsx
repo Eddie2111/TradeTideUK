@@ -1,310 +1,201 @@
-"use client";
+"use client"
 
-import type React from "react";
+import { useEffect } from "react"
+import { ChevronRight } from "lucide-react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { useState } from "react";
-import { ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Card, CardContent } from "@/components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { CURRENCY } from "@/constants/app.constant"
+import type { IShippingFormProps, IShippingFormData, TShippingMethod } from "./types"
+import { useLocalStorage } from "@/lib/useLocalStorage"
+import { updateUserWithProfile } from "@/lib/repositories/profile.repository"
 
-interface ShippingFormProps {
-  initialData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
-  onSubmit: (data: ShippingFormProps["initialData"]) => void;
-  shippingMethod: string;
-  onShippingMethodChange: (method: string) => void;
-}
+// Define the form schema with Zod
+const formSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email address"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^\+?[0-9\s-]{10,15}$/, "Please enter a valid phone number"),
+  address: z.string().min(1, "Address is required"),
+})
 
 export default function ShippingForm({
   initialData,
   onSubmit,
   shippingMethod,
   onShippingMethodChange,
-}: ShippingFormProps) {
-  const [formData, setFormData] = useState(initialData);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+}: IShippingFormProps) {
+  const { getLocalStorage } = useLocalStorage();
+  const form = useForm<IShippingFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialData,
+  })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  // Update form values when initialData changes
+  useEffect(() => {
+    form.reset(initialData)
+  }, [initialData, form])
 
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    // Required fields
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "email",
-      "phone",
-      "address",
-      "city",
-      "state",
-      "postalCode",
-    ];
-
-    requiredFields.forEach(field => {
-      if (!formData[field as keyof typeof formData].trim()) {
-        newErrors[field] = "This field is required";
-      }
-    });
-
-    // Email validation
-    if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-
-    // Phone validation
-    if (formData.phone && !/^\+?[0-9\s-]{10,15}$/.test(formData.phone)) {
-      newErrors.phone = "Please enter a valid phone number";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (validateForm()) {
-      onSubmit(formData);
-    }
-  };
+  // Handle form submission
+  const handleSubmit = async (data: IShippingFormData) => {
+    const profileId = JSON.parse(getLocalStorage("profile") ?? "");
+    const response = await updateUserWithProfile({
+      id: profileId.id,
+      userData: {
+        shippingAddress: data.address
+      },
+    })
+    console.log(response, data);
+    onSubmit(data)
+  }
 
   return (
     <div>
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Shipping Information</h2>
-        <p className="text-muted-foreground">
-          Please enter your shipping details
-        </p>
+        <p className="text-muted-foreground">Please enter your shipping details</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">
-              First Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="firstName"
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
               name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className={errors.firstName ? "border-destructive" : ""}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    First Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.firstName && (
-              <p className="text-destructive text-sm">{errors.firstName}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">
-              Last Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="lastName"
+            <FormField
+              control={form.control}
               name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className={errors.lastName ? "border-destructive" : ""}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Last Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.lastName && (
-              <p className="text-destructive text-sm">{errors.lastName}</p>
-            )}
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              Email <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="email"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
               name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={errors.email ? "border-destructive" : ""}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Email <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.email && (
-              <p className="text-destructive text-sm">{errors.email}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">
-              Phone <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="phone"
+            <FormField
+              control={form.control}
               name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className={errors.phone ? "border-destructive" : ""}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Phone <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.phone && (
-              <p className="text-destructive text-sm">{errors.phone}</p>
-            )}
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="address">
-            Address <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="address"
+          <FormField
+            control={form.control}
             name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className={errors.address ? "border-destructive" : ""}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Shipping Address <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.address && (
-            <p className="text-destructive text-sm">{errors.address}</p>
-          )}
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city">
-              City <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className={errors.city ? "border-destructive" : ""}
-            />
-            {errors.city && (
-              <p className="text-destructive text-sm">{errors.city}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="state">
-              State/Division <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="state"
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              className={errors.state ? "border-destructive" : ""}
-            />
-            {errors.state && (
-              <p className="text-destructive text-sm">{errors.state}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="postalCode">
-              Postal Code <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="postalCode"
-              name="postalCode"
-              value={formData.postalCode}
-              onChange={handleChange}
-              className={errors.postalCode ? "border-destructive" : ""}
-            />
-            {errors.postalCode && (
-              <p className="text-destructive text-sm">{errors.postalCode}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
-          <Input
-            id="country"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            disabled
-          />
-        </div>
-
-        <div className="mt-8">
-          <h3 className="text-lg font-medium mb-4">Shipping Method</h3>
-          <RadioGroup
-            value={shippingMethod}
-            onValueChange={onShippingMethodChange}
-            className="space-y-4"
-          >
-            <Card
-              className={`border ${shippingMethod === "standard" ? "border-primary" : ""}`}
+          <div className="mt-8">
+            <h3 className="text-lg font-medium mb-4">Shipping Method</h3>
+            <RadioGroup
+              value={shippingMethod}
+              onValueChange={(value) => onShippingMethodChange(value as TShippingMethod)}
+              className="space-y-4"
             >
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="standard" id="standard" />
-                  <Label htmlFor="standard" className="cursor-pointer">
-                    <div>
-                      <p className="font-medium">Standard Shipping</p>
-                      <p className="text-sm text-muted-foreground">
-                        3-5 business days
-                      </p>
-                    </div>
-                  </Label>
-                </div>
-                <div className="font-medium">
-                  {formData.country === "Bangladesh" && subtotal > 5000
-                    ? "Free"
-                    : "৳150"}
-                </div>
-              </CardContent>
-            </Card>
-            <Card
-              className={`border ${shippingMethod === "express" ? "border-primary" : ""}`}
-            >
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="express" id="express" />
-                  <Label htmlFor="express" className="cursor-pointer">
-                    <div>
-                      <p className="font-medium">Express Shipping</p>
-                      <p className="text-sm text-muted-foreground">
-                        1-2 business days
-                      </p>
-                    </div>
-                  </Label>
-                </div>
-                <div className="font-medium">৳350</div>
-              </CardContent>
-            </Card>
-          </RadioGroup>
-        </div>
+              <Card className={`border ${shippingMethod === "standard" ? "border-primary" : ""}`}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="standard" id="standard" />
+                    <Label htmlFor="standard" className="cursor-pointer">
+                      <div>
+                        <p className="font-medium">Standard Shipping</p>
+                        <p className="text-sm text-muted-foreground">3-5 business days</p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="font-medium">{CURRENCY}200</div>
+                </CardContent>
+              </Card>
+              <Card className={`border ${shippingMethod === "express" ? "border-primary" : ""}`}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="express" id="express" />
+                    <Label htmlFor="express" className="cursor-pointer">
+                      <div>
+                        <p className="font-medium">Express Shipping</p>
+                        <p className="text-sm text-muted-foreground">1-2 business days</p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="font-medium">{CURRENCY}350</div>
+                </CardContent>
+              </Card>
+            </RadioGroup>
+          </div>
 
-        <div className="pt-4">
-          <Button type="submit" className="w-full sm:w-auto">
-            Continue to Payment
-            <ChevronRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      </form>
+          <div className="pt-4">
+            <Button type="submit" className="w-full sm:w-auto">
+              Continue to Payment
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
-  );
+  )
 }
-
-// Dummy value for subtotal to determine free shipping
-const subtotal = 6000;

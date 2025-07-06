@@ -1,25 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
-interface OrderSummaryProps {
-  cartItems: {
-    id: number;
-    name: string;
-    price: number;
-    image: string;
-    quantity: number;
-    color: string;
-  }[];
-  subtotal: number;
-  shipping: number;
-  total: number;
-  shippingMethod: string;
-}
+import { CURRENCY } from "@/constants/app.constant";
+import type { IOrderSummaryProps } from "./types";
+import SanityImage from "@/components/common/sanity-image.client";
 
 export default function OrderSummary({
   cartItems,
@@ -27,7 +14,7 @@ export default function OrderSummary({
   shipping,
   total,
   shippingMethod,
-}: OrderSummaryProps) {
+}: IOrderSummaryProps) {
   const [promoCode, setPromoCode] = useState("");
   const [isApplying, setIsApplying] = useState(false);
 
@@ -48,14 +35,13 @@ export default function OrderSummary({
     <div className="bg-muted rounded-lg p-6 sticky top-20">
       <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
 
-      <div className="space-y-4 mb-6">
-        {cartItems.map(item => (
-          <div key={item.id} className="flex gap-4">
+      <div className="space-y-4 mb-6 overflow-y-auto max-h-[300px] p-2 border-slate-500 border-1">
+        {cartItems.map((item, index) => (
+          <div key={index} className="flex gap-4">
             <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden">
-              <Image
-                src={item.image || "/placeholder.svg"}
+              <SanityImage
+                image={item.image || "/placeholder.svg"}
                 alt={item.name}
-                fill
                 className="object-cover"
               />
             </div>
@@ -67,7 +53,7 @@ export default function OrderSummary({
               <div className="flex justify-between mt-1">
                 <p className="text-sm">Qty: {item.quantity}</p>
                 <p className="font-medium">
-                  ৳{(item.price * item.quantity).toLocaleString()}
+                  {CURRENCY}{(item.price * item.quantity).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -78,12 +64,12 @@ export default function OrderSummary({
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>৳{subtotal.toLocaleString()}</span>
+          <span>{CURRENCY}{subtotal.toLocaleString()}</span>
         </div>
         <div className="flex justify-between">
           <span>Shipping</span>
           <span>
-            {shipping === 0 ? "Free" : `৳${shipping.toLocaleString()}`}
+            {shipping === 0 ? "Free" : `${CURRENCY}${shipping.toLocaleString()}`}
             <span className="text-xs text-muted-foreground ml-1">
               ({shippingMethod === "standard" ? "Standard" : "Express"})
             </span>
@@ -113,7 +99,7 @@ export default function OrderSummary({
 
       <div className="flex justify-between font-semibold">
         <span>Total</span>
-        <span>৳{total.toLocaleString()}</span>
+        <span>{CURRENCY}{total.toLocaleString()}</span>
       </div>
     </div>
   );

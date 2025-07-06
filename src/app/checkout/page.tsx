@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import Dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,62 +13,25 @@ import {
 } from "lucide-react";
 
 import { toast } from "sonner";
-import { LoadingSpinner } from "@/components/common/loadingSpinner";
 
-const ShippingForm = Dynamic(
-  () => import("@/components/modules/checkout/shipping-form"),
-  {
-    ssr: false,
-    loading: () => <LoadingSpinner />,
-  },
-);
-const PaymentForm = Dynamic(
-  () => import("@/components/modules/checkout/payment-form"),
-  {
-    ssr: false,
-    loading: () => <LoadingSpinner />,
-  },
-);
-const ReviewOrder = Dynamic(
-  () => import("@/components/modules/checkout/review-order"),
-  {
-    ssr: false,
-    loading: () => <LoadingSpinner />,
-  },
-);
-const OrderSummary = Dynamic(
-  () => import("@/components/modules/checkout/order-summary"),
-  {
-    ssr: false,
-    loading: () => <LoadingSpinner />,
-  },
-);
+import {
+  ShippingForm,
+  PaymentForm,
+  ReviewOrder,
+  OrderSummary,
+} from "./_component";
+import { getOneUserProfile } from "@/lib/repositories/profile.repository";
+import { useLocalStorage } from "@/lib/useLocalStorage";
+import { ICartItems } from "@/components/modules/checkout/types";
 
-// Mock cart data
-const cartItems = [
-  {
-    id: 1,
-    name: "Jamdani Saree",
-    price: 12500,
-    image: "/placeholder.svg?height=200&width=200",
-    quantity: 1,
-    color: "Blue",
-  },
-  {
-    id: 7,
-    name: "Jute Handbag",
-    price: 1500,
-    image: "/placeholder.svg?height=200&width=200",
-    quantity: 2,
-    color: "Natural",
-  },
-];
 
 type CheckoutStep = "shipping" | "payment" | "review";
 
 export default function CheckoutPage() {
+  const { getLocalStorage } = useLocalStorage();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [ getCart, setGetCart ] = useState<ICartItems[]>([]);
   const [shippingData, setShippingData] = useState({
     firstName: "",
     lastName: "",
@@ -79,21 +41,19 @@ export default function CheckoutPage() {
     city: "",
     state: "",
     postalCode: "",
-    country: "Bangladesh",
   });
-  const [paymentData, setPaymentData] = useState({
-    cardName: "",
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    saveCard: false,
-  });
+  // const [paymentData, setPaymentData] = useState({
+  //   cardName: "",
+  //   cardNumber: "",
+  //   expiryDate: "",
+  //   cvv: "",
+  //   saveCard: false,
+  // });
+  // const [paymentMethod, setPaymentMethod] = useState("credit");
   const [shippingMethod, setShippingMethod] = useState("standard");
-  const [paymentMethod, setPaymentMethod] = useState("credit");
-
   const router = useRouter();
 
-  const subtotal = cartItems.reduce(
+  const subtotal = getCart.reduce(
     (total, item) => total + item.price * item.quantity,
     0,
   );
@@ -107,12 +67,12 @@ export default function CheckoutPage() {
     window.scrollTo(0, 0);
   };
 
-  const handlePaymentSubmit = (data: typeof paymentData, method: string) => {
-    setPaymentData(data);
-    setPaymentMethod(method);
-    setCurrentStep("review");
-    window.scrollTo(0, 0);
-  };
+  // const handlePaymentSubmit = (data: typeof paymentData, method: string) => {
+  //   setPaymentData(data);
+  //   setPaymentMethod(method);
+  //   setCurrentStep("review");
+  //   window.scrollTo(0, 0);
+  // };
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
@@ -147,6 +107,34 @@ export default function CheckoutPage() {
     { id: "payment", label: "Payment", icon: CreditCard },
     { id: "review", label: "Review", icon: Package },
   ];
+
+  useEffect(()=>{
+    if (currentStep === "review") {
+      window.scrollTo(0, 0);
+    }
+  },[currentStep])
+  useEffect(()=>{
+    const userID = getLocalStorage("profile");
+    const cart = JSON.parse(getLocalStorage("cart-storage") ?? "");
+    setGetCart(cart.state.items ?? []);
+    getOneUserProfile(JSON.parse(userID!).id)
+    .then((user)=>{
+      if (user) {
+        setShippingData({
+          ...shippingData,
+          firstName: user.data?.firstName ?? "",
+          lastName: user.data?.lastName ?? "",
+          email: user?.data?.user?.email ?? "",
+          phone: user.data?.phoneNumber ?? "",
+          address: user.data?.shippingAddress ?? "",
+        })
+      }
+    })
+    .catch((error)=>{
+      console.log("why", error);
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[])
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -216,8 +204,6 @@ export default function CheckoutPage() {
 
           {currentStep === "payment" && (
             <PaymentForm
-              initialData={paymentData}
-              onSubmit={handlePaymentSubmit}
               onBack={() => setCurrentStep("shipping")}
             />
           )}
@@ -237,7 +223,7 @@ export default function CheckoutPage() {
 
         <div>
           <OrderSummary
-            cartItems={cartItems}
+            cartItems={getCart}
             subtotal={subtotal}
             shipping={shipping}
             total={total}

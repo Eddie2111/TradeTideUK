@@ -1,4 +1,4 @@
-const RATE_LIMIT = 50; // Max requests allowed
+const RATE_LIMIT = 2; // Max requests allowed
 const TIME_WINDOW = 20 * 1000; // Time window in milliseconds (1 minute)
 
 const requestCounts = new Map<string, { count: number; resetTime: number }>();

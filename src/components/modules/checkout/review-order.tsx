@@ -4,32 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
-interface ReviewOrderProps {
-  shippingData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-  };
-  paymentData: {
-    cardName: string;
-    cardNumber: string;
-    expiryDate: string;
-    cvv: string;
-    saveCard: boolean;
-  };
-  paymentMethod: string;
-  shippingMethod: string;
-  onBack: () => void;
-  onPlaceOrder: () => void;
-  isProcessing: boolean;
-}
+import type { IReviewOrderProps } from "./types";
 
 export default function ReviewOrder({
   shippingData,
@@ -39,7 +14,7 @@ export default function ReviewOrder({
   onBack,
   onPlaceOrder,
   isProcessing,
-}: ReviewOrderProps) {
+}: IReviewOrderProps) {
   return (
     <div>
       <div className="mb-6">

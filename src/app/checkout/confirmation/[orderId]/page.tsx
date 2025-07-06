@@ -1,22 +1,16 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { CheckCircle, Package, Truck, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getOrderById, updateOrderStatus } from "@/lib/repositories/order.repository";
+import { OrderStatus } from "@prisma/client";
 
-export default function ConfirmationPage() {
-  const [orderNumber, setOrderNumber] = useState("");
-
-  useEffect(() => {
-    // Generate a random order number
-    const randomOrderNumber = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
-    setOrderNumber(randomOrderNumber);
-  }, []);
-
+export default async function ConfirmationPage({ params }: {params: { orderId: string }}) {
+  const order_id = params.orderId;
+  const orderDetails = await getOrderById(order_id);
+  if (!orderDetails) return <div>Order not found</div>;
+  const check = await updateOrderStatus(orderDetails.id, OrderStatus.COMPLETED);
+  console.log(check);
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-3xl mx-auto text-center mb-12">
@@ -28,7 +22,7 @@ export default function ConfirmationPage() {
           Thank you for your purchase. Your order has been received and is being
           processed.
         </p>
-        <p className="text-lg font-medium">Order #{orderNumber}</p>
+        <p className="text-lg font-medium">Order #{order_id}</p>
       </div>
 
       <Card className="mb-8">
