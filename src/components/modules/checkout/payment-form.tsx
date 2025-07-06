@@ -28,7 +28,7 @@ export default function PaymentForm({ onBack }: IPaymentFormProps) {
         products: JSON.parse(cart).state.items,
       }
       );
-      // router.push(payment.data.url);
+      router.push(payment.data.url);
       console.log(payment.data.url)
       console.log(paymentMethod)
     }
